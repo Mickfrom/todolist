@@ -1,0 +1,62 @@
+# Deploy to Render.com
+
+## Quick Deploy (Blueprint)
+
+1. Push code to GitHub
+2. Go to [render.com/blueprints](https://dashboard.render.com/blueprints)
+3. Click **New Blueprint Instance**
+4. Connect your GitHub repo
+5. Render auto-detects `render.yaml` and deploys both services
+6. **After deploy**: Go to `todolist-api` → Environment → Set `CLIENT_URL` to your frontend URL
+
+**Done!** Both services deployed. The `CLIENT_URL` step enables CORS.
+
+---
+
+## Manual Deploy
+
+### Backend (Web Service)
+
+1. **Create Web Service** → Connect GitHub repo
+2. **Settings:**
+   - Root Directory: `server`
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+3. **Add Disk** (required for SQLite):
+   - Mount Path: `/opt/render/project/data`
+   - Size: 1 GB
+4. **Environment Variables:**
+   ```
+   NODE_ENV=production
+   JWT_SECRET=<generate-strong-secret>
+   CLIENT_URL=https://your-frontend.onrender.com
+   DATABASE_PATH=/opt/render/project/data/todolist.db
+   ```
+
+### Frontend (Static Site)
+
+1. **Create Static Site** → Connect GitHub repo
+2. **Settings:**
+   - Root Directory: `client`
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `dist`
+3. **Environment Variables:**
+   ```
+   VITE_API_URL=https://your-backend.onrender.com
+   ```
+
+---
+
+## Important Notes
+
+- **Free tier**: Services sleep after 15 min of inactivity (first request takes ~30s)
+- **Persistent disk**: Required for SQLite, adds $0.25/GB/month on paid plans
+- **Update CLIENT_URL** after frontend deploys (for CORS)
+- **JWT_SECRET**: Use Blueprint's auto-generate or create a strong random string
+
+## Verify Deployment
+
+1. Backend health: `https://your-api.onrender.com/health`
+2. Frontend: Open your static site URL
+3. Test: Register, login, create todos
+

@@ -1,0 +1,75 @@
+# Render Blueprint - Infrastructure as Code
+# Deploy both frontend and backend with one click
+# Docs: https://render.com/docs/blueprint-spec
+#
+# HOW TO USE:
+# 1. Push to GitHub
+# 2. Go to render.com/blueprints -> New Blueprint Instance
+# 3. Connect repo -> Render auto-detects this file
+# 4. After deploy, update CLIENT_URL in backend settings to match frontend URL
+
+services:
+  # ============================================
+  # BACKEND - Express API Server
+  # ============================================
+  - type: web
+    name: todolist-api
+    runtime: node
+    region: oregon  # Change if needed: oregon, frankfurt, ohio, singapore
+    plan: free      # free, starter, standard, pro
+    
+    # Build configuration
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    
+    # Health check endpoint
+    healthCheckPath: /health
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true  # Auto-generate secure random value
+      - key: CLIENT_URL
+        sync: false  # Set manually after deploy: https://todolist-frontend-xxxx.onrender.com
+      - key: DATABASE_PATH
+        value: /opt/render/project/data/todolist.db
+    
+    # Persistent disk for SQLite database
+    # Required to persist data between deploys
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1  # Minimum 1GB
+
+  # ============================================
+  # FRONTEND - React Static Site
+  # ============================================
+  - type: web
+    name: todolist-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    
+    # Build configuration
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    
+    # Environment variables (build-time only for Vite)
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: todolist-api
+          property: hostport
+          # Result: https://todolist-api-xxxx.onrender.com
+    
+    # SPA routing - redirect all paths to index.html
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
