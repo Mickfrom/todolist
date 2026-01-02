@@ -7,6 +7,10 @@
 # 2. Go to render.com/blueprints -> New Blueprint Instance
 # 3. Connect repo -> Render auto-detects this file
 # 4. After deploy, update CLIENT_URL in backend settings to match frontend URL
+#
+# NOTE: Free tier does NOT support persistent disks.
+# Data will be lost on each deploy/restart.
+# For persistence, change plan to "starter" and uncomment the disk section.
 
 services:
   # ============================================
@@ -15,8 +19,8 @@ services:
   - type: web
     name: todolist-api
     runtime: node
-    region: oregon  # Change if needed: oregon, frankfurt, ohio, singapore
-    plan: free      # free, starter, standard, pro
+    region: oregon
+    plan: free  # Change to "starter" for disk support ($7/month)
     
     # Build configuration
     rootDir: server
@@ -31,18 +35,17 @@ services:
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
-        generateValue: true  # Auto-generate secure random value
+        generateValue: true
       - key: CLIENT_URL
-        sync: false  # Set manually after deploy: https://todolist-frontend-xxxx.onrender.com
+        sync: false  # Set manually after deploy
       - key: DATABASE_PATH
-        value: /opt/render/project/data/todolist.db
+        value: ./database/todolist.db  # Local path (no persistence on free tier)
     
-    # Persistent disk for SQLite database
-    # Required to persist data between deploys
-    disk:
-      name: sqlite-data
-      mountPath: /opt/render/project/data
-      sizeGB: 1  # Minimum 1GB
+    # UNCOMMENT below for data persistence (requires "starter" plan or higher)
+    # disk:
+    #   name: sqlite-data
+    #   mountPath: /opt/render/project/data
+    #   sizeGB: 1
 
   # ============================================
   # FRONTEND - React Static Site
@@ -50,8 +53,7 @@ services:
   - type: web
     name: todolist-frontend
     runtime: static
-    region: oregon
-    plan: free
+    # Note: static sites don't support region property
     
     # Build configuration
     rootDir: client
@@ -65,7 +67,6 @@ services:
           type: web
           name: todolist-api
           property: hostport
-          # Result: https://todolist-api-xxxx.onrender.com
     
     # SPA routing - redirect all paths to index.html
     routes:
