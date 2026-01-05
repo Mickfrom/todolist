@@ -49,6 +49,8 @@ function createNewTodo(req, res) {
 
     const todo = createTodo(userId, title, description || '');
 
+    console.log('Created todo:', todo);
+
     res.status(201).json({
       success: true,
       data: { todo }

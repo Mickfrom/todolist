@@ -5,9 +5,15 @@ import { useState } from 'react';
  * Displays a single todo item with edit and delete functionality
  */
 export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
+  // Guard against invalid todo data
+  if (!todo || !todo.id) {
+    console.error('Invalid todo data:', todo);
+    return null;
+  }
+
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    title: todo.title,
+    title: todo.title || '',
     description: todo.description || ''
   });
 

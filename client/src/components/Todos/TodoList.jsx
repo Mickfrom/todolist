@@ -13,6 +13,11 @@ export function TodoList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Debug: Log todos whenever they change
+  useEffect(() => {
+    console.log('TodoList render - todos state:', todos);
+  }, [todos]);
+
   // Fetch todos on component mount
   useEffect(() => {
     loadTodos();
@@ -35,15 +40,14 @@ export function TodoList() {
 
   const handleAddTodo = async (title, description) => {
     try {
-      const response = await createTodo(title, description);
-      console.log('Create todo response:', response);
-      if (response.success && response.data && response.data.todo) {
-        const newTodo = response.data.todo;
-        setTodos((prevTodos) => [newTodo, ...prevTodos]);
-      }
+      await createTodo(title, description);
+      // After creating a todo, reload from the server so the list is always in sync
+      await loadTodos();
+      setError(''); // Clear any previous errors
     } catch (err) {
       console.error('Error creating todo:', err);
       setError(err.response?.data?.error || err.message || 'Failed to create todo');
+      throw err;
     }
   };
 
@@ -51,8 +55,8 @@ export function TodoList() {
     try {
       const response = await toggleTodo(id);
       if (response.success) {
-        setTodos(
-          todos.map((todo) =>
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
             todo.id === id ? response.data.todo : todo
           )
         );
@@ -67,8 +71,8 @@ export function TodoList() {
     try {
       const response = await updateTodo(id, updates);
       if (response.success) {
-        setTodos(
-          todos.map((todo) =>
+        setTodos((prevTodos) =>
+          prevTodos.map((todo) =>
             todo.id === id ? response.data.todo : todo
           )
         );
@@ -83,7 +87,7 @@ export function TodoList() {
     try {
       const response = await deleteTodo(id);
       if (response.success) {
-        setTodos(todos.filter((todo) => todo.id !== id));
+        setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
       }
     } catch (err) {
       console.error('Error deleting todo:', err);
@@ -93,6 +97,8 @@ export function TodoList() {
 
   const completedCount = Array.isArray(todos) ? todos.filter((todo) => todo.completed).length : 0;
   const totalCount = Array.isArray(todos) ? todos.length : 0;
+
+  console.log('Rendering TodoList - total todos:', totalCount, 'Array:', todos);
 
   return (
     <div>
@@ -117,15 +123,19 @@ export function TodoList() {
             <p className="empty-state">No todos yet. Add one above to get started!</p>
           ) : (
             <div className="todo-list">
-              {todos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onToggle={handleToggleTodo}
-                  onUpdate={handleUpdateTodo}
-                  onDelete={handleDeleteTodo}
-                />
-              ))}
+              {console.log('Rendering todo items, count:', todos.length)}
+              {todos.map((todo) => {
+                console.log('Rendering todo item:', todo);
+                return (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={handleToggleTodo}
+                    onUpdate={handleUpdateTodo}
+                    onDelete={handleDeleteTodo}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
