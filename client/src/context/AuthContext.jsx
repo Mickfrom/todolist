@@ -27,55 +27,44 @@ export function AuthProvider({ children }) {
 
   /**
    * Login function
-   * @param {string} email
+   * @param {string} username
    * @param {string} password
    * @returns {Promise<Object>} User and token
    */
-  const login = async (email, password) => {
-    const response = await loginService(email, password);
+  const login = async (username, password) => {
+    const response = await loginService(username, password);
+    const { token, user } = response;
 
-    if (response.success) {
-      const { token, user } = response.data;
+    // Save to state
+    setToken(token);
+    setUser(user);
 
-      // Save to state
-      setToken(token);
-      setUser(user);
+    // Save to localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-      // Save to localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { success: true, user };
-    }
-
-    throw new Error(response.error || 'Login failed');
+    return { success: true, user };
   };
 
   /**
    * Register function
    * @param {string} username
-   * @param {string} email
    * @param {string} password
    * @returns {Promise<Object>} User and token
    */
-  const register = async (username, email, password) => {
-    const response = await registerService(username, email, password);
+  const register = async (username, password) => {
+    const response = await registerService(username, password);
+    const { token, user } = response;
 
-    if (response.success) {
-      const { token, user } = response.data;
+    // Save to state
+    setToken(token);
+    setUser(user);
 
-      // Save to state
-      setToken(token);
-      setUser(user);
+    // Save to localStorage
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
 
-      // Save to localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      return { success: true, user };
-    }
-
-    throw new Error(response.error || 'Registration failed');
+    return { success: true, user };
   };
 
   /**

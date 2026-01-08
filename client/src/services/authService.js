@@ -8,14 +8,12 @@ import api from './api';
 /**
  * Register a new user
  * @param {string} username
- * @param {string} email
  * @param {string} password
  * @returns {Promise<Object>} Response with token and user
  */
-export async function register(username, email, password) {
+export async function register(username, password) {
   const response = await api.post('/api/auth/register', {
     username,
-    email,
     password
   });
   return response.data;
@@ -23,13 +21,13 @@ export async function register(username, email, password) {
 
 /**
  * Login user
- * @param {string} email
+ * @param {string} username
  * @param {string} password
  * @returns {Promise<Object>} Response with token and user
  */
-export async function login(email, password) {
+export async function login(username, password) {
   const response = await api.post('/api/auth/login', {
-    email,
+    username,
     password
   });
   return response.data;

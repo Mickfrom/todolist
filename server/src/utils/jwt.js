@@ -5,13 +5,13 @@ const JWT_EXPIRES_IN = '7d'; // 7 days
 
 /**
  * Generate a JWT token for a user
- * @param {Object} user - User object containing id and email
+ * @param {Object} user - User object containing id and username
  * @returns {string} JWT token
  */
 function generateToken(user) {
   const payload = {
     userId: user.id,
-    email: user.email
+    username: user.username
   };
 
   return jwt.sign(payload, JWT_SECRET, {

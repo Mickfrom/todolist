@@ -43,7 +43,7 @@ export function TodoList() {
       await createTodo(title, description);
       // After creating a todo, reload from the server so the list is always in sync
       await loadTodos();
-      setError(''); // Clear any previous errors
+        setError(''); // Clear any previous errors
     } catch (err) {
       console.error('Error creating todo:', err);
       setError(err.response?.data?.error || err.message || 'Failed to create todo');

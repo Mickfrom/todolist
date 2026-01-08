@@ -14,7 +14,7 @@ const {
  */
 function getAllTodos(req, res) {
   try {
-    const userId = req.user.id;
+    const userId = req.userId;
     const todos = getTodosByUserId(userId);
 
     res.json({
@@ -37,7 +37,7 @@ function getAllTodos(req, res) {
 function createNewTodo(req, res) {
   try {
     const { title, description } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // Validation
     if (!title || title.trim() === '') {
@@ -57,9 +57,11 @@ function createNewTodo(req, res) {
     });
   } catch (error) {
     console.error('Create todo error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Server error while creating todo'
+      error: 'Server error while creating todo',
+      details: error.message
     });
   }
 }
@@ -72,15 +74,6 @@ function updateTodoById(req, res) {
   try {
     const { id } = req.params;
     const { title, description, completed } = req.body;
-    const userId = req.user.id;
-
-    // Check if todo exists and belongs to user
-    if (!todosBelongsToUser(id, userId)) {
-      return res.status(404).json({
-        success: false,
-        error: 'Todo not found'
-      });
-    }
 
     // Prepare updates
     const updates = {};
@@ -110,16 +103,6 @@ function updateTodoById(req, res) {
 function toggleTodoStatus(req, res) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-
-    // Check if todo exists and belongs to user
-    if (!todosBelongsToUser(id, userId)) {
-      return res.status(404).json({
-        success: false,
-        error: 'Todo not found'
-      });
-    }
-
     const updatedTodo = toggleTodo(id);
 
     res.json({
@@ -142,16 +125,6 @@ function toggleTodoStatus(req, res) {
 function deleteTodoById(req, res) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
-
-    // Check if todo exists and belongs to user
-    if (!todosBelongsToUser(id, userId)) {
-      return res.status(404).json({
-        success: false,
-        error: 'Todo not found'
-      });
-    }
-
     deleteTodo(id);
 
     res.json({

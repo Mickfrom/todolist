@@ -1,169 +1,146 @@
-const bcrypt = require('bcrypt');
-const { createUser, findUserByEmail, findUserByUsername, findUserById } = require('../models/User');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 
-const SALT_ROUNDS = 10;
-
-/**
- * Register a new user
- * POST /api/auth/register
- */
-async function register(req, res) {
+// Register new user
+const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     // Validation
-    if (!username || !email || !password) {
+    if (!username || !password) {
       return res.status(400).json({
-        success: false,
-        error: 'Username, email, and password are required'
+        error: 'Username and password are required'
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid email format'
+    // Check if user already exists by username
+    const existingUser = await User.findByUsername(username);
+    if (existingUser) {
+      return res.status(409).json({ 
+        error: 'Username already exists' 
       });
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 6 characters long'
-      });
-    }
-
-    // Check if email already exists
-    const existingEmail = findUserByEmail(email);
-    if (existingEmail) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email already registered'
-      });
-    }
-
-    // Check if username already exists
-    const existingUsername = findUserByUsername(username);
-    if (existingUsername) {
-      return res.status(400).json({
-        success: false,
-        error: 'Username already taken'
-      });
+    // Check if email already exists (only if email is provided)
+    if (email) {
+      const existingEmail = await User.findByEmail(email);
+      if (existingEmail) {
+        return res.status(409).json({
+          error: 'Email already exists'
+        });
+      }
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Create user
-    const user = createUser(username, email, passwordHash);
+    const user = await User.create({
+      username,
+      email,
+      passwordHash
+    });
 
-    // Generate token
+    // Generate JWT token
     const token = generateToken(user);
 
-    // Return success response
     res.status(201).json({
-      success: true,
-      data: {
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email
-        }
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        ...(user.email && { email: user.email })
       }
     });
+
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during registration'
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      error: 'Registration failed',
+      details: error.message 
     });
   }
-}
+};
 
-/**
- * Login user
- * POST /api/auth/login
- */
-async function login(req, res) {
+// Login user
+const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validation
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({
-        success: false,
-        error: 'Email and password are required'
+        error: 'Username and password are required'
       });
     }
 
-    // Find user by email
-    const user = findUserByEmail(email);
+    // Find user by username
+    const user = await User.findByUsername(username);
     if (!user) {
       return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password'
+        error: 'Invalid username or password'
       });
     }
 
-    // Verify password
+    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return res.status(401).json({
-        success: false,
-        error: 'Invalid email or password'
+        error: 'Invalid username or password'
       });
     }
 
-    // Generate token
+    // Generate JWT token
     const token = generateToken(user);
 
-    // Return success response
     res.json({
-      success: true,
-      data: {
-        token,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email
-        }
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        ...(user.email && { email: user.email })
       }
     });
+
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during login'
+    res.status(500).json({ 
+      error: 'Login failed',
+      details: error.message 
     });
   }
-}
+};
 
-/**
- * Get current authenticated user
- * GET /api/auth/me
- */
-function getCurrentUser(req, res) {
+// Get current user
+const getCurrentUser = async (req, res) => {
   try {
-    // req.user is set by auth middleware
+    // req.userId is set by auth middleware
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
     res.json({
-      success: true,
-      data: {
-        user: req.user
+      user: {
+        id: user.id,
+        username: user.username,
+        ...(user.email && { email: user.email })
       }
     });
+
   } catch (error) {
     console.error('Get current user error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
+    res.status(500).json({ 
+      error: 'Failed to get user',
+      details: error.message 
     });
   }
-}
+};
 
 module.exports = {
   register,

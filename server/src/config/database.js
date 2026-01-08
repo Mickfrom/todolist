@@ -1,186 +1,138 @@
-const initSqlJs = require('sql.js');
+const initDb = require('sql.js');
 const fs = require('fs');
 const path = require('path');
 
-// Database file path
-const DATABASE_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../database/todolist.db');
+const DATABASE_PATH = process.env.DATABASE_PATH || './database/todolist.db';
 
 let db = null;
 
-/**
- * Initialize the SQLite database
- * Creates tables if they don't exist
- */
-async function initDatabase() {
-  try {
-    const SQL = await initSqlJs();
+const createTables = `
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 
+  CREATE TABLE IF NOT EXISTS todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    completed INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+`;
+
+const initDatabase = async () => {
+  try {
+    const SQL = await initDb();
+    
     // Check if database file exists
     const dbDir = path.dirname(DATABASE_PATH);
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
     }
 
-    // Load existing database or create new one
+    let dbData = null;
     if (fs.existsSync(DATABASE_PATH)) {
-      const buffer = fs.readFileSync(DATABASE_PATH);
-      db = new SQL.Database(buffer);
-      console.log('Database loaded from:', DATABASE_PATH);
-    } else {
-      db = new SQL.Database();
-      console.log('New database created');
+      dbData = fs.readFileSync(DATABASE_PATH);
     }
 
+    db = dbData ? new SQL.Database(dbData) : new SQL.Database();
+    
     // Create tables
-    createTables();
-
-    // Save database to file
+    db.run(createTables);
+    
+    // Save to disk
     saveDatabase();
-
+    
+    console.log('✅ Database initialized successfully');
     return db;
   } catch (error) {
-    console.error('Database initialization error:', error);
+    console.error('❌ Database initialization error:', error);
     throw error;
   }
-}
+};
 
-/**
- * Create database tables if they don't exist
- */
-function createTables() {
-  // Users table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Todos table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS todos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      title TEXT NOT NULL,
-      description TEXT,
-      completed INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
-
-  console.log('Database tables created/verified');
-}
-
-/**
- * Save database to file
- */
-function saveDatabase() {
+const saveDatabase = () => {
   if (db) {
     const data = db.export();
     const buffer = Buffer.from(data);
     fs.writeFileSync(DATABASE_PATH, buffer);
   }
-}
+};
 
-/**
- * Get database instance
- */
-function getDatabase() {
-  if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
+// Database query wrapper
+const query = (sql, params = []) => {
+  try {
+    const stmt = db.prepare(sql);
+    stmt.bind(params);
+    
+    const results = [];
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    
+    return results;
+  } catch (error) {
+    throw error;
   }
-  return db;
-}
+};
 
-/**
- * Execute a query and return results
- */
-function query(sql, params = []) {
-  const db = getDatabase();
-  const result = db.exec(sql, params);
-  saveDatabase(); // Save after each query
-  return result;
-}
+// Database run wrapper (for INSERT, UPDATE, DELETE)
+const run = (sql, params = []) => {
+  try {
+    db.run(sql, params);
+    saveDatabase();
 
-/**
- * Execute a query and return a single row
- */
-function queryOne(sql, params = []) {
-  const db = getDatabase();
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
+    // For INSERT statements, return the last inserted ID
+    if (sql.trim().toUpperCase().startsWith('INSERT')) {
+      const result = query('SELECT last_insert_rowid() as id');
+      console.log('[DEBUG] Last insert ID query result:', JSON.stringify(result));
+      if (result && result.length > 0 && result[0].id !== undefined) {
+        const lastId = result[0].id;
+        console.log('[DEBUG] Returning last insert ID:', lastId);
+        return lastId;
+      }
+      console.log('[DEBUG] No ID found in result, returning null');
+      return null;
+    }
 
-  let row = null;
-  if (stmt.step()) {
-    const columns = stmt.getColumnNames();
-    const values = stmt.get();
-    row = {};
-    columns.forEach((col, index) => {
-      row[col] = values[index];
-    });
+    // For other statements, return the number of changes
+    return db.getRowsModified();
+  } catch (error) {
+    console.error('[ERROR] Database run error:', error);
+    throw error;
   }
+};
 
-  stmt.free();
-  saveDatabase();
-  return row;
-}
+// Query one row
+const queryOne = (sql, params = []) => {
+  const results = query(sql, params);
+  return results.length > 0 ? results[0] : null;
+};
 
-/**
- * Execute a query and return all rows
- */
-function queryAll(sql, params = []) {
-  const db = getDatabase();
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
+// Query all rows (alias for query)
+const queryAll = (sql, params = []) => {
+  return query(sql, params);
+};
 
-  const rows = [];
-  while (stmt.step()) {
-    const columns = stmt.getColumnNames();
-    const values = stmt.get();
-    const row = {};
-    columns.forEach((col, index) => {
-      row[col] = values[index];
-    });
-    rows.push(row);
-  }
-
-  stmt.free();
-  return rows;
-}
-
-/**
- * Run a query that modifies data (INSERT, UPDATE, DELETE)
- */
-function run(sql, params = []) {
-  const db = getDatabase();
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  stmt.step();
-  stmt.free();
-  saveDatabase();
-}
-
-/**
- * Get the last inserted row ID
- */
-function getLastInsertId() {
-  const db = getDatabase();
-  const result = db.exec("SELECT last_insert_rowid() as id");
-  return result[0]?.values[0]?.[0] || null;
-}
+// Get last insert ID
+const getLastInsertId = () => {
+  return query('SELECT last_insert_rowid() as id')[0].id;
+};
 
 module.exports = {
   initDatabase,
-  getDatabase,
-  saveDatabase,
   query,
   queryOne,
   queryAll,
   run,
-  getLastInsertId
+  getLastInsertId,
+  saveDatabase
 };

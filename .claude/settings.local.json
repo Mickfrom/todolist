@@ -4,7 +4,19 @@
       "Bash(npm create:*)",
       "Bash(npm install)",
       "Bash(npm install:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir:*)",
+      "Bash(del databasetodolist.db)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /F /PID 768)",
+      "Bash(taskkill:*)",
+      "Bash(node src/server.js:*)",
+      "Bash(node:*)",
+      "Bash(npm start)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(ping:*)",
+      "Bash(del test-db-check.js test-login.js test-jwt.js test-connection-simple.js)"
     ]
   }
 }

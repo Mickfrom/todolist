@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -24,32 +24,34 @@ body {
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .header h1 {
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .user-info span {
-  font-size: 0.95rem;
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 /* Authentication Pages */
@@ -190,13 +192,13 @@ body {
   border-radius: 10px;
   padding: 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-top: 2rem;
+  margin-top: 4rem;
 }
 
 .todo-container h2 {
   margin-bottom: 1.5rem;
   color: #333;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
 }
 
 /* Todo Form */
@@ -288,14 +290,14 @@ body {
 }
 
 .todo-title {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: #333;
   margin-bottom: 0.3rem;
 }
 
 .todo-description {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #666;
   margin: 0;
 }

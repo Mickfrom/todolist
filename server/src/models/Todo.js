@@ -14,14 +14,20 @@ const { queryOne, queryAll, run, getLastInsertId } = require('../config/database
  */
 function createTodo(userId, title, description = '') {
   try {
-    run(
+    const todoId = run(
       'INSERT INTO todos (user_id, title, description) VALUES (?, ?, ?)',
       [userId, title, description]
     );
 
-    const todoId = getLastInsertId();
+    console.log('[DEBUG createTodo] Received todoId from run():', todoId, 'Type:', typeof todoId);
+
+    if (todoId === null || todoId === undefined) {
+      throw new Error('Failed to create todo: no ID returned');
+    }
+
     return findTodoById(todoId);
   } catch (error) {
+    console.error('[ERROR createTodo]:', error);
     throw error;
   }
 }
@@ -32,7 +38,10 @@ function createTodo(userId, title, description = '') {
  * @returns {Object|null} Todo object or null
  */
 function findTodoById(id) {
-  return queryOne('SELECT * FROM todos WHERE id = ?', [id]);
+  console.log('[DEBUG findTodoById] Looking for todo with ID:', id);
+  const result = queryOne('SELECT * FROM todos WHERE id = ?', [id]);
+  console.log('[DEBUG findTodoById] Result:', result);
+  return result;
 }
 
 /**

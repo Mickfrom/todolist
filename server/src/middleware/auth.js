@@ -1,5 +1,5 @@
 const { verifyToken } = require('../utils/jwt');
-const { findUserById } = require('../models/User');
+const User = require('../models/User');
 
 /**
  * Authentication middleware
@@ -24,7 +24,7 @@ async function authenticate(req, res, next) {
     const decoded = verifyToken(token);
 
     // Find user
-    const user = findUserById(decoded.userId);
+    const user = await User.findById(decoded.userId);
 
     if (!user) {
       return res.status(401).json({
@@ -33,11 +33,11 @@ async function authenticate(req, res, next) {
       });
     }
 
-    // Attach user to request object (without password)
+    // Attach user ID to request object
+    req.userId = user.id;
     req.user = {
       id: user.id,
-      username: user.username,
-      email: user.email
+      username: user.username
     };
 
     next();

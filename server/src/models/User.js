@@ -1,79 +1,63 @@
-const { queryOne, queryAll, run, getLastInsertId } = require('../config/database');
+const db = require('../config/database');
 
-/**
- * User Model
- * Handles all database operations related to users
- */
+class User {
+  static async findByUsername(username) {
+    try {
+      const query = `SELECT * FROM users WHERE username = ? LIMIT 1`;
+      const result = await db.query(query, [username]);
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      throw new Error(`Error finding user by username: ${error.message}`);
+    }
+  }
 
-/**
- * Create a new user
- * @param {string} username - User's username
- * @param {string} email - User's email
- * @param {string} passwordHash - Hashed password
- * @returns {Object} Created user object
- */
-function createUser(username, email, passwordHash) {
-  try {
-    run(
-      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, passwordHash]
-    );
+  static async findByEmail(email) {
+    try {
+      const query = `SELECT * FROM users WHERE email = ? LIMIT 1`;
+      const result = await db.query(query, [email]);
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      throw new Error(`Error finding user by email: ${error.message}`);
+    }
+  }
 
-    const userId = getLastInsertId();
-    return findUserById(userId);
-  } catch (error) {
-    throw error;
+  static async findById(id) {
+    try {
+      const query = `SELECT * FROM users WHERE id = ? LIMIT 1`;
+      const result = await db.query(query, [id]);
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      throw new Error(`Error finding user by ID: ${error.message}`);
+    }
+  }
+
+  static async create({ username, email, passwordHash }) {
+    try {
+      const query = `
+        INSERT INTO users (username, email, password_hash, created_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      `;
+      const result = await db.run(query, [username, email || null, passwordHash]);
+      
+      return {
+        id: result.lastID,
+        username,
+        email
+      };
+    } catch (error) {
+      // Catch SQLite constraint errors
+      const errorMessage = error.message || error.toString();
+      if (errorMessage && errorMessage.includes('UNIQUE constraint')) {
+        if (errorMessage.includes('username')) {
+          throw new Error('Username already exists');
+        }
+        if (errorMessage.includes('email')) {
+          throw new Error('Email already exists');
+        }
+      }
+      throw error;
+    }
   }
 }
 
-/**
- * Find a user by ID
- * @param {number} id - User ID
- * @returns {Object|null} User object or null
- */
-function findUserById(id) {
-  return queryOne('SELECT * FROM users WHERE id = ?', [id]);
-}
-
-/**
- * Find a user by email
- * @param {string} email - User's email
- * @returns {Object|null} User object or null
- */
-function findUserByEmail(email) {
-  return queryOne('SELECT * FROM users WHERE email = ?', [email]);
-}
-
-/**
- * Find a user by username
- * @param {string} username - User's username
- * @returns {Object|null} User object or null
- */
-function findUserByUsername(username) {
-  return queryOne('SELECT * FROM users WHERE username = ?', [username]);
-}
-
-/**
- * Get all users (admin function)
- * @returns {Array} Array of user objects
- */
-function getAllUsers() {
-  return queryAll('SELECT id, username, email, created_at FROM users');
-}
-
-/**
- * Delete a user by ID
- * @param {number} id - User ID
- */
-function deleteUser(id) {
-  run('DELETE FROM users WHERE id = ?', [id]);
-}
-
-module.exports = {
-  createUser,
-  findUserById,
-  findUserByEmail,
-  findUserByUsername,
-  getAllUsers,
-  deleteUser
-};
+module.exports = User;

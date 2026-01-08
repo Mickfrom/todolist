@@ -9,7 +9,6 @@ import { useAuth } from '../../hooks/useAuth';
 export function Register() {
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
     password: '',
     confirmPassword: ''
   });
@@ -32,8 +31,13 @@ export function Register() {
     setError('');
 
     // Validation
-    if (!formData.username || !formData.email || !formData.password) {
-      setError('All fields are required');
+    if (!formData.username || !formData.password) {
+      setError('Username and password are required');
+      return;
+    }
+
+    if (formData.username.length < 3) {
+      setError('Username must be at least 3 characters');
       return;
     }
 
@@ -50,7 +54,7 @@ export function Register() {
     setLoading(true);
 
     try {
-      await register(formData.username, formData.email, formData.password);
+      await register(formData.username, formData.password);
       navigate('/todos');
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Registration failed');
@@ -75,20 +79,6 @@ export function Register() {
               value={formData.username}
               onChange={handleChange}
               placeholder="Enter username"
-              disabled={loading}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter email"
               disabled={loading}
               required
             />

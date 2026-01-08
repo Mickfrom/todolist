@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
  */
 export function Login() {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -29,15 +29,15 @@ export function Login() {
     e.preventDefault();
     setError('');
 
-    if (!formData.email || !formData.password) {
-      setError('Email and password are required');
+    if (!formData.username || !formData.password) {
+      setError('Username and password are required');
       return;
     }
 
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      await login(formData.username, formData.password);
       navigate('/todos');
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Login failed');
@@ -54,14 +54,14 @@ export function Login() {
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="username">Username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Enter your username"
               disabled={loading}
               required
             />
