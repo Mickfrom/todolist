@@ -225,16 +225,88 @@ body {
 
 /* Todo Stats */
 .todo-stats {
-  text-align: center;
   margin-bottom: 1.5rem;
-  padding: 0.75rem;
+  padding: 1.2rem;
   background: #f8f9fa;
-  border-radius: 5px;
+  border-radius: 8px;
 }
 
-.todo-stats p {
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: white;
+  border-radius: 6px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item.stat-total {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-label {
   color: #666;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  margin-left: auto;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Todo Sections */
+.todo-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.done-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 3px solid #f8f9fa;
+}
+
+.done-section .section-title {
+  color: #28a745;
+  border-bottom-color: #28a745;
+}
+
+.done-section .todo-item {
+  opacity: 0.85;
+  background-color: #f8fdf9;
+}
+
+.done-section .todo-item:hover {
+  opacity: 1;
 }
 
 /* Todo List */
@@ -251,8 +323,8 @@ body {
   border-radius: 8px;
   padding: 1rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.8rem;
   transition: all 0.3s;
 }
 
@@ -302,9 +374,62 @@ body {
   margin: 0;
 }
 
+.todo-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 .todo-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+/* Status Selector */
+.status-selector select {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.status-badge {
+  color: white;
+}
+
+.status-pending {
+  background-color: #6c757d;
+  border-color: #5a6268;
+}
+
+.status-pending:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.status-in_progress {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+}
+
+.status-in_progress:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+  transform: translateY(-1px);
+}
+
+.status-done {
+  background-color: #28a745;
+  border-color: #218838;
+}
+
+.status-done:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
 }
 
 /* Editing Todo */

@@ -14,7 +14,8 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     title: todo.title || '',
-    description: todo.description || ''
+    description: todo.description || '',
+    status: todo.status || 'pending'
   });
 
   const handleToggle = async () => {
@@ -29,7 +30,8 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
     setIsEditing(true);
     setEditData({
       title: todo.title,
-      description: todo.description || ''
+      description: todo.description || '',
+      status: todo.status || 'pending'
     });
   };
 
@@ -37,7 +39,8 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
     setIsEditing(false);
     setEditData({
       title: todo.title,
-      description: todo.description || ''
+      description: todo.description || '',
+      status: todo.status || 'pending'
     });
   };
 
@@ -55,12 +58,10 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this todo?')) {
-      try {
-        await onDelete(todo.id);
-      } catch (error) {
-        console.error('Error deleting todo:', error);
-      }
+    try {
+      await onDelete(todo.id);
+    } catch (error) {
+      console.error('Error deleting todo:', error);
     }
   };
 
@@ -69,6 +70,29 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
       ...editData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    console.log('Status change requested:', { todoId: todo.id, oldStatus: todo.status, newStatus });
+    try {
+      await onUpdate(todo.id, { status: newStatus });
+      console.log('Status change completed successfully');
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      pending: 'Pending',
+      in_progress: 'In Progress',
+      done: 'Done'
+    };
+    return labels[status] || 'Pending';
+  };
+
+  const getStatusClass = (status) => {
+    return `status-badge status-${status}`;
   };
 
   if (isEditing) {
@@ -90,11 +114,21 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
           className="todo-edit-input"
           placeholder="Description"
         />
+        <select
+          name="status"
+          value={editData.status}
+          onChange={handleChange}
+          className="todo-edit-input"
+        >
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
         <div className="todo-actions">
-          <button onClick={handleSaveEdit} className="btn btn-success">
+          <button onClick={handleSaveEdit} className="btn btn-success btn-sm">
             Save
           </button>
-          <button onClick={handleCancelEdit} className="btn btn-secondary">
+          <button onClick={handleCancelEdit} className="btn btn-secondary btn-sm">
             Cancel
           </button>
         </div>
@@ -105,24 +139,31 @@ export function TodoItem({ todo, onToggle, onUpdate, onDelete }) {
   return (
     <div className={`todo-item ${todo.completed ? 'completed' : ''}`}>
       <div className="todo-content">
-        <input
-          type="checkbox"
-          checked={!!todo.completed}
-          onChange={handleToggle}
-          className="todo-checkbox"
-        />
         <div className="todo-text">
           <h3 className="todo-title">{todo.title}</h3>
           {todo.description && <p className="todo-description">{todo.description}</p>}
         </div>
       </div>
-      <div className="todo-actions">
-        <button onClick={handleEdit} className="btn btn-sm">
-          Edit
-        </button>
-        <button onClick={handleDelete} className="btn btn-sm btn-danger">
-          Delete
-        </button>
+      <div className="todo-meta">
+        <div className="status-selector">
+          <select
+            value={todo.status || 'pending'}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className={getStatusClass(todo.status || 'pending')}
+          >
+            <option value="pending">📋 Pending</option>
+            <option value="in_progress">⚡ In Progress</option>
+            <option value="done">✅ Done</option>
+          </select>
+        </div>
+        <div className="todo-actions">
+          <button onClick={handleEdit} className="btn btn-sm">
+            Edit
+          </button>
+          <button onClick={handleDelete} className="btn btn-sm btn-danger">
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );

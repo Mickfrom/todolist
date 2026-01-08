@@ -69,13 +69,14 @@ export function TodoList() {
 
   const handleUpdateTodo = async (id, updates) => {
     try {
+      console.log('handleUpdateTodo called with:', { id, updates });
       const response = await updateTodo(id, updates);
+      console.log('Update response:', response);
       if (response.success) {
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) =>
-            todo.id === id ? response.data.todo : todo
-          )
-        );
+        console.log('Update successful, reloading todos...');
+        // Reload todos from server to ensure sections update correctly
+        await loadTodos();
+        console.log('Todos reloaded');
       }
     } catch (err) {
       console.error('Error updating todo:', err);
@@ -95,10 +96,19 @@ export function TodoList() {
     }
   };
 
-  const completedCount = Array.isArray(todos) ? todos.filter((todo) => todo.completed).length : 0;
   const totalCount = Array.isArray(todos) ? todos.length : 0;
+  const pendingCount = Array.isArray(todos) ? todos.filter((todo) => todo.status === 'pending').length : 0;
+  const inProgressCount = Array.isArray(todos) ? todos.filter((todo) => todo.status === 'in_progress').length : 0;
+  const doneCount = Array.isArray(todos) ? todos.filter((todo) => todo.status === 'done').length : 0;
 
-  console.log('Rendering TodoList - total todos:', totalCount, 'Array:', todos);
+  // Separate todos into active and done
+  const activeTodos = Array.isArray(todos) ? todos.filter((todo) => todo.status !== 'done') : [];
+  const doneTodos = Array.isArray(todos) ? todos.filter((todo) => todo.status === 'done') : [];
+
+  console.log('Rendering TodoList:');
+  console.log('  Total:', totalCount);
+  console.log('  Active:', activeTodos.length, activeTodos.map(t => ({ id: t.id, title: t.title, status: t.status })));
+  console.log('  Done:', doneTodos.length, doneTodos.map(t => ({ id: t.id, title: t.title, status: t.status })));
 
   return (
     <div>
@@ -112,9 +122,28 @@ export function TodoList() {
           <TodoForm onAddTodo={handleAddTodo} />
 
           <div className="todo-stats">
-            <p>
-              {completedCount} of {totalCount} completed
-            </p>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-icon">📋</span>
+                <span className="stat-label">Pending:</span>
+                <span className="stat-value">{pendingCount}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">⚡</span>
+                <span className="stat-label">In Progress:</span>
+                <span className="stat-value">{inProgressCount}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">✅</span>
+                <span className="stat-label">Done:</span>
+                <span className="stat-value">{doneCount}</span>
+              </div>
+              <div className="stat-item stat-total">
+                <span className="stat-icon">📊</span>
+                <span className="stat-label">Total:</span>
+                <span className="stat-value">{totalCount}</span>
+              </div>
+            </div>
           </div>
 
           {loading ? (
@@ -122,21 +151,45 @@ export function TodoList() {
           ) : todos.length === 0 ? (
             <p className="empty-state">No todos yet. Add one above to get started!</p>
           ) : (
-            <div className="todo-list">
-              {console.log('Rendering todo items, count:', todos.length)}
-              {todos.map((todo) => {
-                console.log('Rendering todo item:', todo);
-                return (
-                  <TodoItem
-                    key={todo.id}
-                    todo={todo}
-                    onToggle={handleToggleTodo}
-                    onUpdate={handleUpdateTodo}
-                    onDelete={handleDeleteTodo}
-                  />
-                );
-              })}
-            </div>
+            <>
+              {/* Active Todos Section */}
+              {activeTodos.length > 0 && (
+                <div className="todo-section">
+                  <h3 className="section-title">Active Tasks</h3>
+                  <div className="todo-list">
+                    {activeTodos.map((todo) => (
+                      <TodoItem
+                        key={todo.id}
+                        todo={todo}
+                        onToggle={handleToggleTodo}
+                        onUpdate={handleUpdateTodo}
+                        onDelete={handleDeleteTodo}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Done Todos Section */}
+              {doneTodos.length > 0 && (
+                <div className="todo-section done-section">
+                  <h3 className="section-title">
+                    🏆 Achieved List ({doneTodos.length})
+                  </h3>
+                  <div className="todo-list">
+                    {doneTodos.map((todo) => (
+                      <TodoItem
+                        key={todo.id}
+                        todo={todo}
+                        onToggle={handleToggleTodo}
+                        onUpdate={handleUpdateTodo}
+                        onDelete={handleDeleteTodo}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

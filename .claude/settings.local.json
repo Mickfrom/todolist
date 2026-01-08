@@ -16,7 +16,9 @@
       "Bash(npm start)",
       "Bash(timeout /t 3 /nobreak)",
       "Bash(ping:*)",
-      "Bash(del test-db-check.js test-login.js test-jwt.js test-connection-simple.js)"
+      "Bash(del test-db-check.js test-login.js test-jwt.js test-connection-simple.js)",
+      "Bash(npm restart)",
+      "Bash(timeout /t 3)"
     ]
   }
 }

@@ -73,13 +73,23 @@ function createNewTodo(req, res) {
 function updateTodoById(req, res) {
   try {
     const { id } = req.params;
-    const { title, description, completed } = req.body;
+    const userId = req.userId;
+    const { title, description, completed, status } = req.body;
+
+    // Check if todo belongs to user
+    if (!todosBelongsToUser(id, userId)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
 
     // Prepare updates
     const updates = {};
     if (title !== undefined) updates.title = title;
     if (description !== undefined) updates.description = description;
     if (completed !== undefined) updates.completed = completed;
+    if (status !== undefined) updates.status = status;
 
     const updatedTodo = updateTodo(id, updates);
 
@@ -103,6 +113,16 @@ function updateTodoById(req, res) {
 function toggleTodoStatus(req, res) {
   try {
     const { id } = req.params;
+    const userId = req.userId;
+
+    // Check if todo belongs to user
+    if (!todosBelongsToUser(id, userId)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
     const updatedTodo = toggleTodo(id);
 
     res.json({
@@ -125,14 +145,32 @@ function toggleTodoStatus(req, res) {
 function deleteTodoById(req, res) {
   try {
     const { id } = req.params;
+    const userId = req.userId;
+
+    console.log('[DELETE] Request to delete todo:', id, 'by user:', userId);
+
+    // Check if todo belongs to user
+    const belongs = todosBelongsToUser(id, userId);
+    console.log('[DELETE] Todo belongs to user:', belongs);
+
+    if (!belongs) {
+      console.log('[DELETE] Access denied - todo does not belong to user');
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
+    console.log('[DELETE] Deleting todo from database...');
     deleteTodo(id);
+    console.log('[DELETE] Todo deleted successfully');
 
     res.json({
       success: true,
       data: { message: 'Todo deleted successfully' }
     });
   } catch (error) {
-    console.error('Delete todo error:', error);
+    console.error('[DELETE] Delete todo error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error while deleting todo'

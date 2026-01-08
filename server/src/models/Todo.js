@@ -10,13 +10,14 @@ const { queryOne, queryAll, run, getLastInsertId } = require('../config/database
  * @param {number} userId - User ID who owns the todo
  * @param {string} title - Todo title
  * @param {string} description - Todo description (optional)
+ * @param {string} status - Todo status (pending, in_progress, done)
  * @returns {Object} Created todo object
  */
-function createTodo(userId, title, description = '') {
+function createTodo(userId, title, description = '', status = 'pending') {
   try {
     const todoId = run(
-      'INSERT INTO todos (user_id, title, description) VALUES (?, ?, ?)',
-      [userId, title, description]
+      'INSERT INTO todos (user_id, title, description, status) VALUES (?, ?, ?, ?)',
+      [userId, title, description, status]
     );
 
     console.log('[DEBUG createTodo] Received todoId from run():', todoId, 'Type:', typeof todoId);
@@ -63,7 +64,7 @@ function getTodosByUserId(userId) {
  * @returns {Object} Updated todo object
  */
 function updateTodo(id, updates) {
-  const { title, description, completed } = updates;
+  const { title, description, completed, status } = updates;
 
   const fields = [];
   const values = [];
@@ -79,6 +80,18 @@ function updateTodo(id, updates) {
   if (completed !== undefined) {
     fields.push('completed = ?');
     values.push(completed ? 1 : 0);
+  }
+  if (status !== undefined) {
+    fields.push('status = ?');
+    values.push(status);
+    // Auto-sync completed field with status
+    if (status === 'done') {
+      fields.push('completed = ?');
+      values.push(1);
+    } else {
+      fields.push('completed = ?');
+      values.push(0);
+    }
   }
 
   // Always update the updated_at timestamp
@@ -110,10 +123,11 @@ function toggleTodo(id) {
   }
 
   const newCompleted = todo.completed === 1 ? 0 : 1;
+  const newStatus = newCompleted === 1 ? 'done' : 'pending';
 
   run(
-    'UPDATE todos SET completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [newCompleted, id]
+    'UPDATE todos SET completed = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [newCompleted, newStatus, id]
   );
 
   return findTodoById(id);
