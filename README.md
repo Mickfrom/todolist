@@ -8,10 +8,12 @@ A beginner-friendly full-stack todo list application built with React, Express, 
 - Create, read, update, and delete todos
 - Mark todos as complete/incomplete
 - Edit todo details inline
+- **Database Viewer** - View all database tables and contents without authentication
 - Responsive design
 - Secure password hashing with bcrypt
 - Protected API routes
 - Clean and modern UI
+- Easy deployment to Render.com
 
 ## Tech Stack
 
@@ -196,22 +198,30 @@ CREATE TABLE todos (
 
 ## Deployment on Render.com
 
+### 🚀 Quick Start
+
+**Having issues with "JSON.parse error"?** → See [QUICK_FIX.md](./QUICK_FIX.md)
+
+For complete deployment instructions, see:
+- **📋 Step-by-step guide**: [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+- **📖 Detailed guide**: [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)
+- **🔧 Troubleshooting**: [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
 ### Backend Deployment (Web Service)
 
 1. **Create a new Web Service** on Render.com
 2. **Connect your GitHub repository**
 3. **Configure the service:**
-   - **Build Command:** `cd server && npm install`
-   - **Start Command:** `cd server && node src/server.js`
-   - **Add Persistent Disk:**
-     - Mount Path: `/opt/render/project/data`
-     - Size: 1GB (minimum)
+   - **Root Directory:** `server`
+   - **Build Command:** `npm install`
+   - **Start Command:** `node src/server.js`
 4. **Set Environment Variables:**
    ```
    NODE_ENV=production
    JWT_SECRET=<generate-strong-secret>
    CLIENT_URL=<your-frontend-url>
-   DATABASE_PATH=/opt/render/project/data/todolist.db
+   DATABASE_PATH=./database/todolist.db
+   PORT=10000
    ```
 
 ### Frontend Deployment (Static Site)
@@ -219,19 +229,31 @@ CREATE TABLE todos (
 1. **Create a new Static Site** on Render.com
 2. **Connect your GitHub repository**
 3. **Configure the service:**
-   - **Build Command:** `cd client && npm install && npm run build`
-   - **Publish Directory:** `client/dist`
+   - **Root Directory:** `client`
+   - **Build Command:** `npm install && npm run build`
+   - **Publish Directory:** `dist`
 4. **Set Environment Variables:**
    ```
    VITE_API_URL=<your-backend-url>
    ```
 
+### 🧪 Testing Your Deployment
+
+After deployment, visit: `https://your-frontend-url.onrender.com/debug.html`
+
+This debug page will help you verify:
+- Backend is accessible
+- API endpoints are working
+- CORS is configured correctly
+- JSON responses are valid
+
 ### Important Notes for Render Deployment
 
-- The backend needs a **persistent disk** for SQLite database storage
-- Make sure `DATABASE_PATH` points to the persistent disk location
-- The `_redirects` file in `client/public` handles SPA routing
-- Generate a strong `JWT_SECRET` for production (use a password generator)
+- Free tier services sleep after 15 minutes of inactivity (first request takes ~30-60s)
+- Database is ephemeral on free tier (resets on restart)
+- For persistent data, upgrade to paid plan with persistent disk
+- Both services auto-redeploy on GitHub push
+- Use the debug page (`/debug.html`) to troubleshoot issues
 
 ## Usage
 
@@ -273,18 +295,33 @@ CREATE TABLE todos (
 
 ## Troubleshooting
 
+### Common Issues
+
+**"JSON.parse: unexpected character at line 1 column 1" error:**
+- See [QUICK_FIX.md](./QUICK_FIX.md) for immediate solution
+- Check that `VITE_API_URL` matches your backend URL
+- Verify `CLIENT_URL` on backend matches your frontend URL
+- Use `/debug.html` page to test API connectivity
+
 **Database not persisting:**
-- Check that `DATABASE_PATH` is set correctly
-- On Render, ensure persistent disk is mounted and path is correct
+- Free tier on Render has ephemeral storage (resets on restart)
+- For persistence, upgrade to paid plan with persistent disk
 
 **CORS errors:**
-- Verify `CLIENT_URL` environment variable matches frontend URL
+- Verify `CLIENT_URL` environment variable matches frontend URL exactly
 - Check that API calls use correct `VITE_API_URL`
+- Make sure both services redeployed after env var changes
 
 **Authentication issues:**
 - Clear localStorage and try logging in again
-- Check that JWT_SECRET matches on server
+- Check that JWT_SECRET is set on server
 - Verify token is being sent in Authorization header
+
+**Backend takes long to respond:**
+- Normal on free tier - services sleep after 15 minutes
+- First request after sleeping takes 30-60 seconds
+
+For more help, see [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
 ## Future Enhancements
 

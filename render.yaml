@@ -63,10 +63,7 @@ services:
     # Environment variables (build-time only for Vite)
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: todolist-api
-          property: hostport
+        value: https://todolist-api.onrender.com  # Update this after backend is deployed
     
     # SPA routing - redirect all paths to index.html
     routes:
