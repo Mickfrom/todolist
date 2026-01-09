@@ -18,7 +18,11 @@
       "Bash(ping:*)",
       "Bash(del test-db-check.js test-login.js test-jwt.js test-connection-simple.js)",
       "Bash(npm restart)",
-      "Bash(timeout /t 3)"
+      "Bash(timeout /t 3)",
+      "Bash(sqlite3:*)",
+      "Bash(npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(timeout 8 npm run dev:*)"
     ]
   }
 }

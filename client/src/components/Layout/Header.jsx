@@ -1,5 +1,5 @@
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 /**
  * Header Component
@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 export function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -17,7 +18,23 @@ export function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <h1>Todo List</h1>
+        <div className="header-left">
+          <h1>Todo List</h1>
+          <nav className="header-nav">
+            <Link
+              to="/todos"
+              className={location.pathname === '/todos' ? 'nav-link active' : 'nav-link'}
+            >
+              Todos
+            </Link>
+            <Link
+              to="/database"
+              className={location.pathname === '/database' ? 'nav-link active' : 'nav-link'}
+            >
+              Database
+            </Link>
+          </nav>
+        </div>
         <div className="user-info">
           <span>Welcome, {user?.username}!</span>
           <button onClick={handleLogout} className="btn btn-secondary">

@@ -4,6 +4,7 @@ import { PrivateRoute } from './components/Layout/PrivateRoute';
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';
 import { TodoList } from './components/Todos/TodoList';
+import { DatabaseViewer } from './components/Database/DatabaseViewer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/App.css';
 
@@ -23,6 +24,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/database" element={<DatabaseViewer />} />
 
             {/* Protected routes */}
             <Route

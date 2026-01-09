@@ -4,6 +4,7 @@ const cors = require('cors');
 const { initDatabase } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const todoRoutes = require('./routes/todos');
+const databaseRoutes = require('./routes/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -34,6 +35,7 @@ async function startServer() {
     // API Routes
     app.use('/api/auth', authRoutes);
     app.use('/api/todos', todoRoutes);
+    app.use('/api/database', databaseRoutes);
 
     // 404 handler
     app.use(notFoundHandler);
