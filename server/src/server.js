@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const { initDatabase } = require('./config/database');
 const authRoutes = require('./routes/auth');
@@ -55,8 +56,14 @@ async function startServer() {
     app.use('/api/todos', todoRoutes);
     app.use('/api/database', databaseRoutes);
 
-    // 404 handler
-    app.use(notFoundHandler);
+    // Serve static files from React build
+    const clientBuildPath = path.join(__dirname, '../../client/dist');
+    app.use(express.static(clientBuildPath));
+
+    // Handle React routing - send all non-API requests to React app
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
 
     // Error handler (must be last)
     app.use(errorHandler);
