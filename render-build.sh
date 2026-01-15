@@ -5,7 +5,7 @@ set -e # Exit on error
 
 echo "==> Building client..."
 cd client
-npm ci
+npm ci --include=dev
 npm run build
 echo "✓ Client built successfully"
 cd ..
