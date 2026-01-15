@@ -30,7 +30,8 @@
       "Bash(git push:*)",
       "Bash(npx:*)",
       "Bash(render:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }
