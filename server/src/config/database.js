@@ -21,6 +21,7 @@ const createTables = `
     title TEXT NOT NULL,
     description TEXT,
     completed INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -46,7 +47,19 @@ const initDatabase = async () => {
     
     // Create tables
     db.run(createTables);
-    
+
+    // Migration: Add status column if it doesn't exist
+    try {
+      const tableInfo = db.exec("PRAGMA table_info(todos)");
+      const columns = tableInfo[0]?.values?.map(row => row[1]) || [];
+      if (!columns.includes('status')) {
+        db.run("ALTER TABLE todos ADD COLUMN status TEXT DEFAULT 'pending'");
+        console.log('✅ Migration: Added status column to todos table');
+      }
+    } catch (migrationError) {
+      console.log('Migration check skipped or failed:', migrationError.message);
+    }
+
     // Save to disk
     saveDatabase();
     
